@@ -229,7 +229,13 @@ const http = require('node:http');
  */
 function httpPost(url, headers, body) {
     return new Promise((resolve, reject) => {
-        const parsedUrl = new URL(url);
+        let parsedUrl;
+        try {
+            parsedUrl = new URL(url);
+        } catch (e) {
+            reject(new Error(`无效的 URL: ${url}`));
+            return;
+        }
         const isHttps = parsedUrl.protocol === 'https:';
         const httpModule = isHttps ? https : http;
         const bodyData = typeof body === 'string' ? body : JSON.stringify(body);
@@ -246,32 +252,51 @@ function httpPost(url, headers, body) {
             }
         };
 
+        // 允许自签名证书（部分本地部署需要）
+        if (isHttps) {
+            reqOptions.rejectUnauthorized = false;
+        }
+
         const req = httpModule.request(reqOptions, (res) => {
             let data = '';
-            res.on('data', chunk => { data += chunk.toString(); });
-            res.on('end', () => {
-                try {
-                    const json = JSON.parse(data);
-                    if (res.statusCode >= 200 && res.statusCode < 300) {
-                        resolve(json);
-                    } else {
-                        reject(new Error(json.error?.message || json.message || `HTTP ${res.statusCode}`));
-                    }
-                } catch (e) {
-                    if (res.statusCode >= 200 && res.statusCode < 300) {
+            // 处理 gzip/deflate 压缩响应
+            const encoding = res.headers['content-encoding'];
+            let stream = res;
+            if (encoding === 'gzip') {
+                const zlib = require('node:zlib');
+                stream = res.pipe(zlib.createGunzip());
+            } else if (encoding === 'deflate') {
+                const zlib = require('node:zlib');
+                stream = res.pipe(zlib.createInflate());
+            }
+            stream.on('data', chunk => { data += chunk.toString(); });
+            stream.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
                         resolve(data);
-                    } else {
-                        reject(new Error(`HTTP ${res.statusCode}: ${data.substring(0, 300)}`));
                     }
+                } else {
+                    let errMsg = `HTTP ${res.statusCode}`;
+                    try {
+                        const json = JSON.parse(data);
+                        errMsg = json.error?.message || json.message || errMsg;
+                    } catch (e) {
+                        if (data) errMsg += `: ${data.substring(0, 200)}`;
+                    }
+                    reject(new Error(errMsg));
                 }
             });
-            res.on('error', reject);
+            stream.on('error', reject);
         });
 
-        req.on('error', reject);
+        req.on('error', (err) => {
+            reject(new Error(`网络错误: ${err.message}`));
+        });
         req.setTimeout(60000, () => {
             req.destroy();
-            reject(new Error('Request timeout'));
+            reject(new Error('请求超时（60s）'));
         });
         req.write(bodyData);
         req.end();
@@ -431,7 +456,11 @@ async function testEmbeddingConnection(config) {
  */
 async function customAI(messages, config) {
     const { apiKey, endpoint, model } = config;
-    const url = endpoint || 'https://api.openai.com/v1/chat/completions';
+    let url = endpoint || 'https://api.openai.com/v1/chat/completions';
+    // 自动补全路径：如果端点不含 /chat/completions，则追加
+    if (!url.endsWith('/chat/completions')) {
+        url = url.replace(/\/+$/, '') + '/chat/completions';
+    }
     const headers = { 'Authorization': `Bearer ${apiKey}` };
     const body = {
         model: model || 'gpt-4o-mini',

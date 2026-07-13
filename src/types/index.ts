@@ -146,6 +146,15 @@ export interface AIConfig {
     model?: string;                      // 模型名称
 }
 
+/** 保存的自定义 AI 配置（支持多个） */
+export interface CustomAIConfig {
+    id: string;                          // 配置ID
+    name: string;                        // 配置名称（如"OpenAI"、"硅基流动"）
+    endpoint: string;                    // API 端点
+    apiKey: string;                      // API Key
+    model: string;                       // 模型名称
+}
+
 /** Embedding 配置 */
 export interface EmbeddingConfig {
     provider: 'openai' | 'ollama' | 'siliconflow' | 'compatible';
@@ -203,6 +212,7 @@ export interface Settings {
     lastSyncTime: number;
     aiModel: string;                     // utools.ai() 模式下的模型
     aiConfig?: AIConfig;                 // 🆕 AI 后端配置（utools/custom 切换）
+    savedAIConfigs?: CustomAIConfig[];   // 🆕 保存的自定义 AI 配置列表
     embeddingConfig?: EmbeddingConfig;   // 🆕 Embedding 配置
     aiExtraInstruction?: string;         // 🆕 AI 分析附加指令
     aiConcurrency?: number;

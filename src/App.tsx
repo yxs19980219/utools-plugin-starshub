@@ -11,6 +11,7 @@ import { Toolbar } from './components/Toolbar';
 import { AnalyzeProgress } from './components/AnalyzeProgress';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { logger } from './utils/logger';
+import { githubService } from './services/githubService';
 
 function setupRepositorySearchSubInput(isFocus = true): void {
     if (typeof utools === 'undefined') return;
@@ -100,6 +101,40 @@ const App: React.FC = () => {
 
         return () => clearTimeout(timer);
     }, []);
+
+    // 🆕 启动时自动验证 Token / AI / Embedding 连接
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const { settings: s, token: t } = useStore.getState();
+
+            // 自动验证 Token
+            if (t) {
+                githubService.verifyToken(t).then(valid => {
+                    if (!valid) {
+                        console.warn('[Startup] Token 已失效');
+                        window.githubStarsAPI.showNotification?.('GitHub Token 可能已失效，请检查设置');
+                    }
+                }).catch(() => {});
+            }
+
+            // 自动测试自定义 AI 连接
+            if (s?.aiConfig?.mode === 'custom' && s.aiConfig.apiKey && s.aiConfig.endpoint) {
+                window.githubStarsAPI.customAI(
+                    [{ role: 'user', content: 'hi' }],
+                    { mode: 'custom', apiKey: s.aiConfig.apiKey, endpoint: s.aiConfig.endpoint, model: s.aiConfig.model }
+                ).then(() => console.log('[Startup] 自定义 AI 连接正常'))
+                 .catch(e => console.warn('[Startup] 自定义 AI 连接失败:', e.message));
+            }
+
+            // 自动测试 Embedding 连接
+            if (s?.embeddingConfig?.provider && s?.embeddingConfig?.model) {
+                window.githubStarsAPI.testEmbeddingConnection(s.embeddingConfig)
+                    .then(r => console.log(r.success ? `[Startup] Embedding 连接正常，维度: ${r.dimensions}` : `[Startup] Embedding 连接失败: ${r.error}`))
+                    .catch(e => console.warn('[Startup] Embedding 连接失败:', e.message));
+            }
+        }, 1500); // 延迟 1.5 秒，等 settings 加载完
+        return () => clearTimeout(timer);
+    }, [settings]);
 
     // 🆕 v1.3.0 自动分析检查
     useEffect(() => {
