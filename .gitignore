@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Temporary files
+stdout
+
+# AI/tooling state
+.codegraph/
+.omo/
+.claude/
+.mcp.json
+.serena/
+.spec-workflow/
+AGENTS.md
+CLAUDE.md
+src/**/CLAUDE.md
+*.local.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local

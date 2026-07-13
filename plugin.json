@@ -1,0 +1,46 @@
+{
+    "main": "dist/index.html",
+    "logo": "logo.png",
+    "preload": "preload.js",
+    "pluginSetting": {
+        "single": true,
+        "height": 600
+    },
+    "features": [
+        {
+            "code": "github-stars",
+            "explain": "StarsHub - GitHub 星标管理",
+            "icon": "logo.png",
+            "cmds": [
+                "github stars",
+                "gh stars",
+                "星标管理",
+                "StarsHub"
+            ]
+        },
+        {
+            "code": "github-stars-search",
+            "explain": "搜索 GitHub 星标仓库",
+            "cmds": [
+                {
+                    "type": "over",
+                    "label": "搜索 StarsHub 星标仓库",
+                    "minLength": 1,
+                    "maxLength": 100
+                }
+            ]
+        },
+        {
+            "code": "github-stars-repo",
+            "explain": "打开指定仓库",
+            "cmds": [
+                {
+                    "type": "regex",
+                    "label": "在 StarsHub 中打开",
+                    "match": "/^[a-zA-Z0-9-]+\\/[a-zA-Z0-9._-]+$/",
+                    "minLength": 3
+                }
+            ]
+        }
+    ]
+}
