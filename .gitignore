@@ -15,7 +15,6 @@ stdout
 .mcp.json
 .serena/
 .spec-workflow/
-AGENTS.md
 CLAUDE.md
 src/**/CLAUDE.md
 *.local.json
