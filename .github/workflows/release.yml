@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - run: npm run build
+
+      - name: 打包 release 目录
+        run: |
+          mkdir -p release
+          cp plugin.json preload.js logo.png release/
+          cp -r dist release/dist
+          cd release && zip -r ../starshub-${{ github.ref_name }}.zip . && cd ..
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: starshub-${{ github.ref_name }}.zip
+          generate_release_notes: true
