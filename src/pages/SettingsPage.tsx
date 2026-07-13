@@ -33,9 +33,9 @@ export const SettingsPage: React.FC = () => {
     const [tokenHelpExpanded, setTokenHelpExpanded] = useState(false);
     const [embeddingStatus, setEmbeddingStatus] = useState<'idle' | 'testing' | 'connected' | 'failed'>('idle');
     const [aiStatus, setAiStatus] = useState<'idle' | 'testing' | 'connected' | 'failed'>('idle');
-    const [customEndpoint, setCustomEndpoint] = useState(settings.aiConfig?.endpoint || '');
-    const [customKey, setCustomKey] = useState(settings.aiConfig?.apiKey || '');
-    const [customModel, setCustomModel] = useState(settings.aiConfig?.model || '');
+    const [customEndpoint, setCustomEndpoint] = useState('');
+    const [customKey, setCustomKey] = useState('');
+    const [customModel, setCustomModel] = useState('');
     const [customName, setCustomName] = useState('');
     const [configTestStatus, setConfigTestStatus] = useState<Record<string, 'idle' | 'testing' | 'connected' | 'failed'>>({});
     const [expandedConfigId, setExpandedConfigId] = useState<string | null>(null);
@@ -415,7 +415,7 @@ export const SettingsPage: React.FC = () => {
                                         {/* 展开后：编辑 + 操作 */}
                                         {isExpanded && (
                                             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                                <input className="input" style={{ fontSize: 13 }} placeholder="API Endpoint (如 https://api.openai.com/v1)" value={editEndpoint} onChange={e => setEditEndpoint(e.target.value)} />
+                                                <input className="input" style={{ fontSize: 13 }} placeholder="API Endpoint (如 https://api.deepseek.com)" value={editEndpoint} onChange={e => setEditEndpoint(e.target.value)} />
                                                 <input className="input" style={{ fontSize: 13 }} placeholder="API Key" type="password" value={editKey} onChange={e => setEditKey(e.target.value)} />
                                                 <input className="input" style={{ fontSize: 13 }} placeholder="模型 (如 gpt-4o-mini)" value={editModel} onChange={e => setEditModel(e.target.value)} />
                                                 <div style={{ display: 'flex', gap: 8 }}>
@@ -459,7 +459,7 @@ export const SettingsPage: React.FC = () => {
                                     <Plus size={14} /> 新建自定义 API
                                 </h3>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                    <input className="input" style={{ fontSize: 13 }} placeholder="API Endpoint (如 https://api.openai.com/v1/chat/completions)" value={customEndpoint} onChange={e => setCustomEndpoint(e.target.value)} />
+                                    <input className="input" style={{ fontSize: 13 }} placeholder="API Endpoint (如 https://api.deepseek.com)" value={customEndpoint} onChange={e => setCustomEndpoint(e.target.value)} />
                                     <input className="input" style={{ fontSize: 13 }} placeholder="API Key" type="password" value={customKey} onChange={e => setCustomKey(e.target.value)} />
                                     <input className="input" style={{ fontSize: 13 }} placeholder="模型 (如 gpt-4o-mini)" value={customModel} onChange={e => setCustomModel(e.target.value)} />
                                     <button
