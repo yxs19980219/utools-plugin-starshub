@@ -1,7 +1,7 @@
 {
   "name": "starshub",
   "description": "StarsHub - GitHub 星标管理 uTools 插件",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "private": true,
   "scripts": {
     "dev": "vite",
