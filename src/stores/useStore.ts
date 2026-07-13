@@ -473,7 +473,10 @@ export const useStore = create<AppState>((set, get) => ({
                 language,
                 concurrency,
                 settings.aiModel || undefined,
-                controller.signal
+                controller.signal,
+                get().dimensions,
+                settings.aiConfig,
+                settings.aiExtraInstruction,
             );
 
             // 不可变更新仓库数据，确保 Zustand 订阅和 memo 组件稳定刷新
@@ -655,7 +658,10 @@ export const useStore = create<AppState>((set, get) => ({
             if (view) {
                 viewFiltered = repositories.filter(repo => {
                     return view.filters.every(filter => {
-                        const repoOptions = repo.dimensionTags?.[filter.dimensionId] || [];
+                        let repoOptions = repo.dimensionTags?.[filter.dimensionId] || [];
+                        if (filter.dimensionId === 'platform' && repoOptions.length === 0) {
+                            repoOptions = repo.aiPlatforms || [];
+                        }
                         return filter.optionIds.some(optId => repoOptions.includes(optId));
                     });
                 });
@@ -1137,8 +1143,11 @@ export const useStore = create<AppState>((set, get) => ({
         // 按视图的 filters 筛选（AND 关系）
         return repositories.filter(repo => {
             return view.filters.every(filter => {
-                const repoOptions = repo.dimensionTags?.[filter.dimensionId] || [];
-                // OR 关系：仓库在该维度的选项中，任一匹配 filter 的 optionIds 即通过
+                let repoOptions = repo.dimensionTags?.[filter.dimensionId] || [];
+                // Fallback: platform 维度回退查 aiPlatforms
+                if (filter.dimensionId === 'platform' && repoOptions.length === 0) {
+                    repoOptions = repo.aiPlatforms || [];
+                }
                 return filter.optionIds.some(optId => repoOptions.includes(optId));
             });
         });

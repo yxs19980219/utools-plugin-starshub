@@ -109,6 +109,7 @@ export const Toolbar: React.FC = () => {
                     value={preciseSearchKeyword}
                     onChange={e => setPreciseSearchKeyword(e.target.value)}
                 />
+                <style>{`input::placeholder { color: var(--color-text-muted); opacity: 0.5; }`}</style>
                 {preciseSearchKeyword && (
                     <button style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2 }} onClick={() => setPreciseSearchKeyword('')}>
                         <X size={14} />

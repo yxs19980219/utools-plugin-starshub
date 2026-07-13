@@ -95,7 +95,10 @@ export const aiService = {
         repo: Repository,
         token: string,
         language: 'zh' | 'en' = 'zh',
-        model?: string
+        model?: string,
+        dimensions?: any[],
+        aiConfig?: any,
+        extraInstruction?: string
     ): Promise<{ summary: string; tags: string[]; dimensions?: Record<string, string[]>; platforms: string[] } | null> {
         const readme = await window.githubStarsAPI.getReadme(
             repo.owner.login,
@@ -118,8 +121,9 @@ export const aiService = {
                 description: repo.description,
                 language: repo.language,
             },
-            [],  // 空维度，后续阶段传入实际维度
-            undefined,  // aiConfig，后续阶段传入
+            dimensions || [],
+            aiConfig,
+            extraInstruction,
         );
 
         if (!result) {
@@ -130,7 +134,6 @@ export const aiService = {
             };
         }
 
-        // 兼容：把 dimensions 转成 tags（旧代码用 tags）
         const tags = result.dimensions ? Object.values(result.dimensions).flat() : (repo.topics || []);
         return {
             summary: result.summary,
@@ -156,12 +159,14 @@ export const aiService = {
         language: 'zh' | 'en' = 'zh',
         concurrency: number = 1,
         model?: string,
-        signal?: AbortSignal
+        signal?: AbortSignal,
+        dimensions?: any[],
+        aiConfig?: any,
+        extraInstruction?: string
     ): Promise<Repository[]> {
         const queue = [...repos];
         let completed = 0;
 
-        // 使用 Map 保证顺序和唯一性（修复竞态条件）
         const results = new Map<number, Repository>();
 
         const processQueue = async () => {
@@ -170,11 +175,16 @@ export const aiService = {
                 if (!repo) break;
 
                 try {
-                    const result = await aiService.analyzeRepository(repo, token, language, model);
+                    const result = await aiService.analyzeRepository(repo, token, language, model, dimensions, aiConfig, extraInstruction);
                     if (result && !signal?.aborted) {
                         repo.aiSummary = result.summary;
                         repo.aiTags = result.tags;
                         repo.aiPlatforms = result.platforms;
+                        repo.dimensionTags = result.dimensions || {};
+                        // 确保 platform 维度同步到 dimensionTags（AI 可能只返回 platforms 不放 dimensions）
+                        if (result.platforms?.length) {
+                            repo.dimensionTags['platform'] = result.platforms;
+                        }
                         repo.analyzedAt = new Date().toISOString();
                         repo.analysisFailed = false;
                     }
@@ -186,7 +196,7 @@ export const aiService = {
                 }
 
                 if (!signal?.aborted) {
-                    results.set(repo.id, repo);  // 使用 Map 保证唯一性
+                    results.set(repo.id, repo);
                     completed++;
                     onProgress(completed, repos.length, repo);
                 }
@@ -199,7 +209,6 @@ export const aiService = {
 
         await Promise.all(workers);
 
-        // 返回时按原始顺序排列
         return repos.map(r => results.get(r.id) || r);
     },
 

@@ -44,7 +44,7 @@ export const Sidebar: React.FC = () => {
     };
 
     const sidebarStyle: React.CSSProperties = {
-        width: 152, minWidth: 152,
+        width: 142, minWidth: 142,
         display: 'flex', flexDirection: 'column',
         borderRight: '1px solid var(--color-border)',
         background: 'var(--color-surface-secondary)',
@@ -58,7 +58,7 @@ export const Sidebar: React.FC = () => {
 
     const itemStyle = (active: boolean): React.CSSProperties => ({
         display: 'flex', alignItems: 'center', gap: 6,
-        padding: '6px 12px', fontSize: 13, cursor: 'pointer',
+        padding: '6px 10px 6px 12px', fontSize: 13, cursor: 'pointer',
         color: active ? 'var(--color-primary)' : 'var(--color-text-primary)',
         background: active ? 'var(--color-primary-light)' : 'transparent',
         borderLeft: active ? '2px solid var(--color-primary)' : '2px solid transparent',
@@ -66,8 +66,8 @@ export const Sidebar: React.FC = () => {
     });
 
     const badgeStyle: React.CSSProperties = {
-        marginLeft: 'auto', fontSize: 11, color: 'var(--color-text-muted)',
-        background: 'var(--color-surface)', padding: '0 5px', borderRadius: 8, minWidth: 18, textAlign: 'center', flexShrink: 0,
+        marginLeft: 'auto', fontSize: 9, color: 'var(--color-text-muted)',
+        background: 'var(--color-surface)', padding: '0 3px', borderRadius: 6, minWidth: 14, textAlign: 'center', flexShrink: 0, lineHeight: '14px', height: '14px',
     };
 
     const nameSpanStyle: React.CSSProperties = {

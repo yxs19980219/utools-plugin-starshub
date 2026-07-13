@@ -809,34 +809,36 @@ window.githubStarsAPI = {
      * @returns {Promise<{ summary, dimensions: {}, platforms: [] } | null>}
      */
     analyzeRepo: async (readmeContent, repoInfo, dimensions, aiConfig, extraInstruction) => {
-        // 组装维度选项 prompt
+        // 组装维度选项 prompt（dimensions 已包含平台维度，不重复添加）
         let dimensionText = '';
-        for (const dim of dimensions) {
-            dimensionText += `\n${dimensions.indexOf(dim) + 1}. ${dim.name}（${dim.description || ''}）\n`;
+        const allDimIds = [];
+        for (let i = 0; i < dimensions.length; i++) {
+            const dim = dimensions[i];
+            allDimIds.push(dim.id);
+            dimensionText += `\n${i + 1}. 维度ID="${dim.id}" 名称="${dim.name}"（${dim.description || ''}）\n`;
             for (const opt of dim.options) {
-                dimensionText += `   - ${opt.id}: ${opt.name}（${opt.description || opt.name}）\n`;
+                dimensionText += `   - 选项ID="${opt.id}" 名称="${opt.name}"（${opt.description || opt.name}）\n`;
             }
         }
 
-        // 平台维度固定
-        dimensionText += `\n${dimensions.length + 1}. 平台（支持的平台）\n   - mac / windows / linux / ios / android / docker / web / cli\n`;
+        // 构建示例 JSON key（用实际维度 ID）
+        const exampleKeys = allDimIds.map(id => `"${id}": ["选项ID"]`).join(', ');
 
         const systemPrompt = `你是一个 GitHub 仓库分析专家。请分析以下仓库信息，在每个维度中选择最匹配的标签（可多选），并用一段话描述这个项目的特色。
 
-维度定义：
+维度定义（注意：返回 JSON 时 key 必须用"维度ID"，value 必须用"选项ID"）：
 ${dimensionText}
 
 ${extraInstruction ? `附加指令：${extraInstruction}\n` : ''}请以 JSON 格式返回:
 {
-  "summary": "项目特色简述（说明这个项目特别在哪里，自由发挥）",
+  "summary": "项目特色简述",
   "dimensions": {
-    "${dimensions[0]?.id || 'dim1'}": ["选项ID"],
-    ...
+    ${exampleKeys}
   },
   "platforms": ["mac", "cli"]
 }
 
-注意：dimensions 里的 key 是维度 ID，value 是选项 ID 数组。只能从上面列出的选项中选择。`;
+重要：dimensions 的 key 必须是维度ID（如 ${allDimIds.map(id => `"${id}"`).join('、')}），value 必须是选项ID数组（如 ["mac", "cli"]）。不要用名称，必须用 ID。`;
 
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -852,7 +854,7 @@ ${extraInstruction ? `附加指令：${extraInstruction}\n` : ''}请以 JSON 格
                 console.log('[AI分析] 使用自定义 AI', { repo: repoInfo.fullName, model: aiConfig.model });
                 result = await customAI(messages, aiConfig);
             } else {
-                console.log('[AI分析] 使用 utools.ai，能量消耗中...', { repo: repoInfo.fullName, model: aiConfig?.model });
+                console.log('[AI分析] 使用 utools.ai', { repo: repoInfo.fullName, model: aiConfig?.model });
                 const aiOptions = { messages };
                 if (aiConfig?.model) aiOptions.model = aiConfig.model;
                 result = await utools.ai(aiOptions);
@@ -861,7 +863,30 @@ ${extraInstruction ? `附加指令：${extraInstruction}\n` : ''}请以 JSON 格
             const content = result.content || '';
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
-                return JSON.parse(jsonMatch[0]);
+                const parsed = JSON.parse(jsonMatch[0]);
+                // 后处理：构建 名称->ID 映射表，把 AI 可能返回的名称转成 ID
+                const nameToId = {};
+                for (const dim of dimensions) {
+                    for (const opt of dim.options) {
+                        nameToId[opt.name] = opt.id;
+                        nameToId[opt.name.toLowerCase()] = opt.id;
+                    }
+                    // 维度名称->ID 映射
+                    const dimNameToId = {};
+                    dimNameToId[dim.name] = dim.id;
+                    // 如果 dimensions 的 key 是名称而非 ID，转换
+                    if (parsed.dimensions) {
+                        const fixedDims = {};
+                        for (const [key, val] of Object.entries(parsed.dimensions)) {
+                            const realDimId = key === dim.name ? dim.id : key;
+                            const optIds = Array.isArray(val) ? val.map(v => nameToId[v] || nameToId[String(v).toLowerCase()] || v) : [val];
+                            fixedDims[realDimId] = optIds;
+                        }
+                        parsed.dimensions = fixedDims;
+                    }
+                }
+                console.log('[AI分析] 结果', { repo: repoInfo.fullName, dimensions: parsed.dimensions, platforms: parsed.platforms });
+                return parsed;
             }
             return null;
         } catch (error) {
