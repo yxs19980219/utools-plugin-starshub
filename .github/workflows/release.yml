@@ -21,12 +21,9 @@ jobs:
 
       - run: npm run build
 
-      - name: 打包 release 目录
+      - name: 打包 dist 目录
         run: |
-          mkdir -p release
-          cp plugin.json preload.js logo.png release/
-          cp -r dist release/dist
-          cd release && zip -r ../starshub-${{ github.ref_name }}.zip . && cd ..
+          cd dist && zip -r ../starshub-${{ github.ref_name }}.zip . && cd ..
 
       - name: 创建 GitHub Release
         uses: softprops/action-gh-release@v2

@@ -1,31 +1,29 @@
 {
-    "name":  "starshub",
-    "description":  "StarsHub - GitHub 星标管理 uTools 插件",
-    "version":  "1.1.2",
-    "private":  true,
-    "scripts":  {
-                    "dev":  "vite",
-                    "build":  "tsc \u0026\u0026 vite build",
-                    "preview":  "vite preview",
-                    "sync-version":  "powershell -Command \"$tag = git describe --tags --abbrev=0 2\u003e$null; if ($tag) { $ver = $tag -replace \u0027v\u0027,\u0027\u0027; $pkg = Get-Content package.json -Raw | ConvertFrom-Json; $pkg.version = $ver; $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json; Write-Output (\u0027synced: \u0027 + $ver) }\"",
-                    "release":  "npm run sync-version \u0026\u0026 tsc \u0026\u0026 vite build \u0026\u0026 powershell -Command \"$d=\u0027release\u0027; if(Test-Path $d){Remove-Item $d -Recurse -Force}; New-Item -ItemType Directory -Path $d|Out-Null; Copy-Item plugin.json,preload.js,logo.png $d; Copy-Item dist $d\\dist -Recurse; Write-Output \u0027release ready\u0027\""
-                },
-    "dependencies":  {
-                         "@dnd-kit/core":  "^6.3.1",
-                         "@dnd-kit/sortable":  "^10.0.0",
-                         "@dnd-kit/utilities":  "^3.2.2",
-                         "lucide-react":  "^0.474.0",
-                         "react":  "^19.0.0",
-                         "react-dom":  "^19.0.0",
-                         "zustand":  "^5.0.3"
-                     },
-    "devDependencies":  {
-                            "@tailwindcss/vite":  "^4.0.14",
-                            "@types/react":  "^19.0.10",
-                            "@types/react-dom":  "^19.0.4",
-                            "@vitejs/plugin-react":  "^4.3.4",
-                            "tailwindcss":  "^4.0.14",
-                            "typescript":  "~5.7.2",
-                            "vite":  "^6.2.0"
-                        }
+  "name": "starshub",
+  "description": "StarsHub - GitHub 星标管理 uTools 插件",
+  "version": "1.1.2",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && node scripts/post-build.js",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "lucide-react": "^0.474.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.14",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.14",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  }
 }
