@@ -1,10 +1,13 @@
 {
-    "main": "dist/index.html",
+    "main": "index.html",
     "logo": "logo.png",
-    "preload": "preload.js",
+    "preload": "preload/services.js",
     "pluginSetting": {
         "single": true,
         "height": 600
+    },
+    "development": {
+        "main": "http://localhost:5173"
     },
     "features": [
         {
